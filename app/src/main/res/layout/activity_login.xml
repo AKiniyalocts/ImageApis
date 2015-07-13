@@ -1,0 +1,55 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" tools:context=".LoginActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="80dp"
+        android:id="@+id/login_title"
+        android:textColor="@color/primary"
+        android:text="@string/please_login"
+        android:fontFamily="sans-serif-light"
+        android:textSize="38sp"
+        android:layout_centerHorizontal="true"
+        />
+
+    <com.example.anthony.wedpics.widgets.CustomTextInputLayout
+        android:id="@+id/userid_wrap"
+        android:padding="10dp"
+        android:layout_centerVertical="true"
+        android:layout_below="@+id/login_title"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+
+        <EditText
+            style="@style/AppTheme.LoginTheme.EditText"
+            android:id="@+id/login_userid"
+            android:hint="@string/userid_hint"
+            />
+    </com.example.anthony.wedpics.widgets.CustomTextInputLayout>
+
+    <com.example.anthony.wedpics.widgets.CustomTextInputLayout
+        android:id="@+id/user_password_wrap"
+        android:padding="10dp"
+        android:layout_below="@+id/userid_wrap"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+
+        <EditText
+            style="@style/AppTheme.LoginTheme.EditText"
+            android:id="@+id/login_password"
+            android:inputType="textPassword"
+            android:hint="@string/user_password_hint"
+            />
+    </com.example.anthony.wedpics.widgets.CustomTextInputLayout>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/user_password_wrap"
+        android:text="@string/login"
+        android:layout_margin="10dp"
+        android:id="@+id/login_button"
+        />
+</RelativeLayout>

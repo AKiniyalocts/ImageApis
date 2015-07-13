@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">App Name</string>
+    <string name="app_slogan">The #1 Photo and Video App for Your App</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="userid_hint">User ID</string>
+    <string name="user_password_hint">Password</string>
+    <string name="login">Login</string>
+    <string name="please_login">Please login...</string>
+    <string name="error_not_empty">Field must not be empty</string>
+
+    <string name="auth_pass">password</string>
+    <string name="auth_fail">Please check your userid/password and try again.</string>
+    <string name="auth_title">Authentication Failure</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="splash_title">App Name</string>
+    <string name="capture">Capture</string>
+    <string name="gallery">Gallery</string>
+    <string name="title_activity_gallery">GalleryActivity</string>
+</resources>
