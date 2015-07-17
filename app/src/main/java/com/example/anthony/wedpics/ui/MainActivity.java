@@ -7,24 +7,34 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.widget.ImageView;
+import android.view.View;
+import android.widget.TextView;
 
 import com.example.anthony.wedpics.R;
 import com.example.anthony.wedpics.helpers.UriHelper;
 import com.example.anthony.wedpics.model.Picture;
-import com.squareup.picasso.Picasso;
+import com.example.anthony.wedpics.tasks.ImageResizedCallback;
+import com.example.anthony.wedpics.tasks.ResizeImageTask;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
-import io.realm.Realm;
+import butterknife.OnLongClick;
 
-public class MainActivity extends AppCompatActivity {
+/*
+    Main screen. Shows Gallery and allows users to add new photos to it.
+ */
+public class MainActivity extends AppCompatActivity implements ImageResizedCallback{
 
     public static final String TAG = MainActivity.class.getSimpleName();
 
@@ -36,8 +46,22 @@ public class MainActivity extends AppCompatActivity {
     @InjectView(R.id.main_toolbar)
     Toolbar mToolbar;
 
+    @InjectView(R.id.gallery_recycler)
+    RecyclerView mRecycler;
+
+    @InjectView(R.id.empty_gallery_text)
+    TextView mEmptyText;
+
 
     private Uri imageUri;
+
+    private List<Picture> mPictures;
+
+    private GalleryAdapter mAdapter;
+
+    private Picture picture;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,14 +69,61 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
         initToolbar();
+
+        /*
+            Only initialize if it has not been laid out already
+         */
+        if(mRecycler.getLayoutManager() == null)
+            initRecycler();
+
     }
 
     /*
-        Handle intents for capturing images from the camera, and choosing them from the gallery.
+       Image is ready. Lets replace the placeholder with the actual resized image
+    */
+    @Override
+    public void onImageResized(String filePath) {
+        picture = null;
+
+        picture = new Picture();
+        picture.setPicturePath(filePath);
+        picture.setDateCreated(new Date());
+
+
+        mAdapter.update(picture);
+
+    }
+
+    /*
+        Add dummy picture to adapter to show placeholder.
      */
+    @Override
+    public void onShowPlaceHolder() {
+        picture = new Picture();
+        picture.setIsPlaceholder(true);
+
+        mAdapter.add(picture);
+
+        /*
+            Hide our empty set text if there are items in gallery
+         */
+        if(mAdapter.getItemCount() > 0)
+            mEmptyText.setVisibility(View.INVISIBLE);
+
+        /*
+            Smooth scroll to top to see new image
+         */
+        mRecycler.smoothScrollToPosition(0);
+    }
+
+    /*
+                Handle intents for capturing images from the camera, and choosing them from the gallery.
+             */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
+
+        picture = null;
         /*
             Capturing with camera.
          */
@@ -62,26 +133,16 @@ public class MainActivity extends AppCompatActivity {
 
                 File finalFile = new File(getRealPathFromURI(imageUri));
 
-                /*
-                    Save to local data store
-                 */
-                final Picture picture = new Picture();
+                picture = new Picture();
                 picture.setDateCreated(new Date());
                 picture.setPicturePath(finalFile.getAbsolutePath());
 
-                Realm realm = Realm.getInstance(this);
-
-                realm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        realm.copyToRealmOrUpdate(picture);
-                    }
-                });
 
                 /*
-                    Start the gallery
+                    Start the resizing process
                  */
-                onGalleryClick();
+                new ResizeImageTask(picture.getPicturePath(), this).execute();
+
             }
             else{
 
@@ -96,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
             if(resultCode == RESULT_OK){
 
+
                     imageUri = data.getData();
 
                     /*
@@ -103,35 +165,20 @@ public class MainActivity extends AppCompatActivity {
                      */
                     File finalFile = new File(UriHelper.getPath(this, imageUri));
 
-                    final Picture picture = new Picture();
+                    picture = new Picture();
                     picture.setDateCreated(new Date());
                     picture.setPicturePath(finalFile.getAbsolutePath());
 
-                    Realm realm = Realm.getInstance(this);
+                /*
+                    Start resize process
+                 */
+                    new ResizeImageTask(picture.getPicturePath(), this).execute();
 
-                    /*
-                        Write to local data store
-                     */
-                    realm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                     realm.copyToRealmOrUpdate(picture);
-                    }
-                    });
 
-                    /*
-                        Start the gallery
-                     */
-                    onGalleryClick();
 
                 }
 
             }
-
-            else {
-
-            }
-
 
 
     }
@@ -141,7 +188,25 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
     }
 
-    @OnClick(R.id.button_capture)
+    /*
+        Initialize our recycler view with an empty list and a layoutmanager.
+     */
+    private void initRecycler(){
+        mPictures = new ArrayList<Picture>();
+        mAdapter = new GalleryAdapter(this, mPictures);
+
+        mRecycler.setLayoutManager(new LinearLayoutManager(this));
+        mRecycler.setAdapter(mAdapter);
+    }
+
+
+    @OnLongClick(R.id.new_image)
+    public boolean onShowHint(){
+        Snackbar.make(mRecycler, getString(R.string.capture_hint), Snackbar.LENGTH_LONG).show();
+        return true;
+    }
+
+    @OnClick(R.id.new_image)
     public void onCaptureClick(){
 
         /*
@@ -172,13 +237,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-    @OnClick(R.id.button_gallery)
-    public void onGalleryClick(){
-        Intent galleryIntent = new Intent(this, GalleryActivity.class);
-        galleryIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(galleryIntent);
-    }
 
     public String getRealPathFromURI(Uri uri) {
         Cursor cursor = this.getContentResolver().query(uri, null, null, null, null);

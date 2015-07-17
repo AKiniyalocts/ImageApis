@@ -2,22 +2,21 @@ package com.example.anthony.wedpics.model;
 
 import java.util.Date;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by anthony on 7/12/15.
  *
  * Simple model class for a picture object. We have a date and a path to the image.
  *
- * Persisted with Realm.
  */
-public class Picture extends RealmObject{
+public class Picture{
 
-    @PrimaryKey
+
     private String picturePath;
 
     private Date dateCreated;
+
+    private boolean isPlaceholder = false;
 
     public String getPicturePath() {
         return picturePath;
@@ -33,5 +32,13 @@ public class Picture extends RealmObject{
 
     public void setDateCreated(Date dateCreated) {
         this.dateCreated = dateCreated;
+    }
+
+    public boolean isPlaceholder() {
+        return isPlaceholder;
+    }
+
+    public void setIsPlaceholder(boolean isPlaceholder) {
+        this.isPlaceholder = isPlaceholder;
     }
 }
